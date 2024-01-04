@@ -9,7 +9,7 @@ def id3(df, target_attribute, attribute_names, default_class=None):
         return next(iter(cnt))
     
     elif df.empty or (not attribute_names):
-         return default_class
+        return default_class
 
     else:
         gainz = mutual_info_classif(df[attribute_names],df[target_attribute],discrete_features=True)
