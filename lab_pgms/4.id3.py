@@ -1,42 +1,102 @@
 import pandas as pd
-from pprint import pprint
-from sklearn.feature_selection import mutual_info_classif
-from collections import Counter
+import math
+import numpy as np
 
-def id3(df, target_attribute, attribute_names, default_class=None):
-    cnt=Counter(x for x in df[target_attribute])
-    if len(cnt)==1:
-        return next(iter(cnt))
-    
-    elif df.empty or (not attribute_names):
-        return default_class
+data = pd.read_csv("testtennis.csv")
+features = [feat for feat in data]
+features.remove("answer")
 
+class Node:
+    def __init__(self):
+        self.children = []
+        self.value = None
+        self.isLeaf = False
+        self.pred = None
+#Define a function called entropy to find the entropy oof the dataset.
+
+def entropy(examples):
+    pos = 0.0
+    neg = 0.0
+    for _, row in examples.iterrows():
+        if row["answer"] == "yes":
+            pos += 1
+        else:
+            neg += 1
+    if pos == 0.0 or neg == 0.0:
+        return 0.0
     else:
-        gainz = mutual_info_classif(df[attribute_names],df[target_attribute],discrete_features=True)
-        index_of_max=gainz.tolist().index(max(gainz))
-        best_attr=attribute_names[index_of_max]
-        tree={best_attr:{}}
-        remaining_attribute_names=[i for i in attribute_names if i!=best_attr]
-        
-        for attr_val, data_subset in df.groupby(best_attr):
-            subtree=id3(data_subset, target_attribute, remaining_attribute_names,default_class)
-            tree[best_attr][attr_val]=subtree
-        
-        return tree
-    
+        p = pos / (pos + neg)
+        n = neg / (pos + neg)
+        return -(p * math.log(p, 2) + n * math.log(n, 2))
+#Define a function named info_gain to find the gain of the attribute
 
-df=pd.read_csv("p-tennis.csv")
+def info_gain(examples, attr):
+    uniq = np.unique(examples[attr])
+    gain = entropy(examples)
+    for u in uniq:
+        subdata = examples[examples[attr] == u]
+        sub_e = entropy(subdata)
+        gain -= ((len(subdata)) / len(examples)) * sub_e
+    return gain
+#Define a function named ID3 to get the decision tree for the given dataset
 
-attribute_names=df.columns.tolist()
-print("List of attribut name")
+def ID3(examples, attrs):
+    root = Node()
 
-attribute_names.remove("PlayTennis")
+    max_gain = 0
+    max_feat = None
+    for feature in attrs:
+        gain = info_gain(examples, feature)
+        if gain > max_gain:
+            max_gain = gain
+            max_feat = feature
+    root.value = max_feat
+    uniq = np.unique(examples[max_feat])
+    for u in uniq:
+        subdata = examples[examples[max_feat] == u]
+        if entropy(subdata) == 0.0:
+            newNode = Node()
+            newNode.isLeaf = True
+            newNode.value = u
+            newNode.pred = np.unique(subdata["answer"])
+            root.children.append(newNode)
+        else:
+            dummyNode = Node()
+            dummyNode.value = u
+            new_attrs = attrs.copy()
+            new_attrs.remove(max_feat)
+            child = ID3(subdata, new_attrs)
+            dummyNode.children.append(child)
+            root.children.append(dummyNode)
 
-for colname in df.select_dtypes("object"):
-    df[colname], _ = df[colname].factorize()
-    
-print(df)
+    return root
+#Define a function named printTree to draw the decision tree
 
-tree= id3(df,"PlayTennis", attribute_names)
-print("The tree structure")
-pprint(tree)
+def printTree(root: Node, depth=0):
+    for i in range(depth):
+        print("\t", end="")
+    print(root.value, end="")
+    if root.isLeaf:
+        print(" -> ", root.pred)
+    print()
+    for child in root.children:
+        printTree(child, depth + 1)
+#Define a function named classify to classify the new example
+
+def classify(root: Node, new):
+    for child in root.children:
+        if child.value == new[root.value]:
+            if child.isLeaf:
+                print ("Predicted Label for new example", new," is:", child.pred)
+                exit
+            else:
+                classify (child.children[0], new)
+#Finally, call the ID3, printTree and classify functions
+
+root = ID3(data, features)
+print("Decision Tree is:")
+printTree(root)
+print ("------------------")
+
+new = {"outlook":"sunny", "temperature":"hot", "humidity":"normal", "wind":"strong"}
+classify (root, new)

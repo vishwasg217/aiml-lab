@@ -5,7 +5,15 @@ with open("trainingexamples.csv") as f:
     data = list(csv_file)
 
     specific = data[0][:-1]
-    general = [['?' for i in range(len(specific))] for j in range(len(specific))]
+    # general = [['?' for i in range(len(specific))] for j in range(len(specific))]
+
+    # 
+    general = []
+    for i in range(len(specific)):
+        g = []
+        for j in range(len(specific)):
+            g.append('?')
+        general.append(g)    
 
     for i in data:
         if i[-1] == "Yes":
