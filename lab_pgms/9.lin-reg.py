@@ -14,10 +14,6 @@ def local_regression(x0, x, y, tau):
     return x0 @ beta
 
 
-def radial_kernel(x0, x, tau):
-    return np.exp(np.sum((x - x0) ** 2, axis=1) / (-2 * tau ** 2))
-
-
 def plot_lr(tau):
     domain = np.linspace(-5, 5, num=500)
     pred = [local_regression(x0, x, y, tau) for x0 in domain] 
