@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 class GaussianNaiveBayes:
     """
@@ -91,10 +92,15 @@ class GaussianNaiveBayes:
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
-iris = load_iris()
+# iris = load_iris()
 
-X = iris.data
-y = iris.target
+# X = iris.data
+# y = iris.target
+
+
+diabetes = pd.read_csv('diabetes.csv')
+X = diabetes.iloc[:, :-1].values
+y = diabetes.iloc[:, -1].values
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 gnb = GaussianNaiveBayes()

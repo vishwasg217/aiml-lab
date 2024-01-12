@@ -153,7 +153,7 @@ def getaccuracy(testset,predictions):
             correct+=1
     return ((correct/len(testset))*100)
 
-filename="diabetes2.csv"
+filename="diabetes.csv"
 splitratio=0.9 
 dataset=loadcsv(filename)
 trainset,testset=splitdataset(dataset,splitratio)
